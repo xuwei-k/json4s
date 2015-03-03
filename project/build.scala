@@ -59,6 +59,7 @@ object build extends Build {
     manifestSetting,
     publishSetting,
     resolvers ++= Seq(Opts.resolver.sonatypeSnapshots, Opts.resolver.sonatypeReleases),
+    resolvers += "staging-2.10.5" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1186/",
     crossVersion := CrossVersion.binary
   )
 
