@@ -1,6 +1,7 @@
 package org.json4s
 
 import java.util.Locale.ENGLISH
+import MonadicJValue._
 
 final class MonadicJValue(val jv: JValue) extends AnyVal {
 
@@ -18,25 +19,6 @@ final class MonadicJValue(val jv: JValue) extends AnyVal {
       case x :: Nil ⇒ x
       case x ⇒ JArray(x)
     }
-
-  private[this] def findDirectByName(xs: List[JValue], name: String): List[JValue] = xs.flatMap {
-    case JObject(l) ⇒ l.filter {
-      case (n, _) if n == name ⇒ true
-      case _ ⇒ false
-    } map (_._2)
-    case JArray(l) ⇒ findDirectByName(l, name)
-    case _ ⇒ Nil
-  }
-
-  private[this] def findDirect(xs: List[JValue], p: JValue ⇒ Boolean): List[JValue] = xs.flatMap {
-    case JObject(l) ⇒ l.filter {
-      case (n, x) if p(x) ⇒ true
-      case _ ⇒ false
-    } map (_._2)
-    case JArray(l) ⇒ findDirect(l, p)
-    case x if p(x) ⇒ x :: Nil
-    case _ ⇒ Nil
-  }
 
   /**
    * XPath-like expression to query JSON fields by name. Returns all matching fields.
@@ -304,25 +286,6 @@ final class MonadicJValue(val jv: JValue) extends AnyVal {
     }
   }
 
-  private[this] def camelize(word: String): String = {
-    val w = pascalize(word)
-    w.substring(0, 1).toLowerCase(ENGLISH) + w.substring(1)
-  }
-  private[this] def pascalize(word: String): String = {
-    val lst = word.split("_").toList
-    (lst.headOption.map(s ⇒ s.substring(0, 1).toUpperCase(ENGLISH) + s.substring(1)).get ::
-      lst.tail.map(s ⇒ s.substring(0, 1).toUpperCase + s.substring(1))).mkString("")
-  }
-  private[this] def underscore(word: String): String = {
-    val spacesPattern = "[-\\s]".r
-    val firstPattern = "([A-Z]+)([A-Z][a-z])".r
-    val secondPattern = "([a-z\\d])([A-Z])".r
-    val replacementPattern = "$1_$2"
-    spacesPattern.replaceAllIn(
-      secondPattern.replaceAllIn(
-        firstPattern.replaceAllIn(
-          word, replacementPattern), replacementPattern), "_").toLowerCase
-  }
 
   /**
    * Camelize all the keys in this [[org.json4s.JsonAST.JValue]]
@@ -340,9 +303,9 @@ final class MonadicJValue(val jv: JValue) extends AnyVal {
    */
   def underscoreKeys = snakizeKeys
 
-  private[this] def rewriteJsonAST(camelize: Boolean): JValue =
+  private def rewriteJsonAST(camelize: Boolean): JValue =
     transformField {
-      case JField(nm, x) if !nm.startsWith("_") ⇒ JField(if (camelize) this.camelize(nm) else underscore(nm), x)
+      case JField(nm, x) if !nm.startsWith("_") ⇒ JField(if (camelize) MonadicJValue.camelize(nm) else underscore(nm), x)
     }
 
   /**
@@ -352,6 +315,51 @@ final class MonadicJValue(val jv: JValue) extends AnyVal {
   def noNulls = remove {
     case JNull | JNothing => true
     case _ => false
+  }
+
+}
+
+object MonadicJValue {
+
+  private def findDirectByName(xs: List[JValue], name: String): List[JValue] = xs.flatMap {
+    case JObject(l) ⇒ l.filter {
+      case (n, _) if n == name ⇒ true
+      case _ ⇒ false
+    } map (_._2)
+    case JArray(l) ⇒ findDirectByName(l, name)
+    case _ ⇒ Nil
+  }
+
+  private def findDirect(xs: List[JValue], p: JValue ⇒ Boolean): List[JValue] = xs.flatMap {
+    case JObject(l) ⇒ l.filter {
+      case (n, x) if p(x) ⇒ true
+      case _ ⇒ false
+    } map (_._2)
+    case JArray(l) ⇒ findDirect(l, p)
+    case x if p(x) ⇒ x :: Nil
+    case _ ⇒ Nil
+  }
+
+  private def camelize(word: String): String = {
+    val w = pascalize(word)
+    w.substring(0, 1).toLowerCase(ENGLISH) + w.substring(1)
+  }
+
+  private def pascalize(word: String): String = {
+    val lst = word.split("_").toList
+    (lst.headOption.map(s ⇒ s.substring(0, 1).toUpperCase(ENGLISH) + s.substring(1)).get ::
+      lst.tail.map(s ⇒ s.substring(0, 1).toUpperCase + s.substring(1))).mkString("")
+  }
+
+  private def underscore(word: String): String = {
+    val spacesPattern = "[-\\s]".r
+    val firstPattern = "([A-Z]+)([A-Z][a-z])".r
+    val secondPattern = "([a-z\\d])([A-Z])".r
+    val replacementPattern = "$1_$2"
+    spacesPattern.replaceAllIn(
+      secondPattern.replaceAllIn(
+        firstPattern.replaceAllIn(
+          word, replacementPattern), replacementPattern), "_").toLowerCase
   }
 
 }
