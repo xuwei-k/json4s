@@ -87,6 +87,15 @@ object ExtractionBugs {
     }
   }
 
+  case class HasVector(model: String, passengers: Vector[String])
+
+  case class HasStream(xs: Stream[Int])
+  case class HasIterable(xs: Iterable[Int])
+  case class HasImmutableQueue(xs: collection.immutable.Queue[Int])
+  case class HasMutableQueue(xs: collection.mutable.Queue[Int])
+  case class HasImmutableHashSet(xs: collection.immutable.HashSet[Int])
+  case class HasMutableHashSet(xs: collection.mutable.HashSet[Int])
+  case class HasArrayBuffer(xs: collection.mutable.ArrayBuffer[Int])
 }
 abstract class ExtractionBugs[T](mod: String) extends Specification with JsonMethods[T] {
 
@@ -208,6 +217,21 @@ abstract class ExtractionBugs[T](mod: String) extends Specification with JsonMet
       parse("""{"num": 12.305}""", useBigDecimalForDouble = true).extract[ABigDecimal] must_== bd
     }
 
+    "Issue 82 Support Vector deserialization" in {
+      val model = HasVector("Ford", Vector("Alice", "Bob"))
+      val json = parse("""{"model":"Ford","passengers":["Alice","Bob"]}""")
+      json.extract[HasVector] must_== model
+    }
+
+    "Support various collections deserialization" in {
+       val json = parse("""{"xs":[1, 2, 3]}""")
+
+       json.extract[HasIterable] must_== HasIterable(Iterable(1, 2, 3))
+       json.extract[HasImmutableQueue] must_== HasImmutableQueue(collection.immutable.Queue(1, 2, 3))
+       json.extract[HasMutableQueue] must_== HasMutableQueue(collection.mutable.Queue(1, 2, 3))
+       json.extract[HasImmutableHashSet] must_== HasImmutableHashSet(collection.immutable.HashSet(1, 2, 3))
+       json.extract[HasMutableHashSet] must_== HasMutableHashSet(collection.mutable.HashSet(1, 2, 3))
+       json.extract[HasArrayBuffer] must_== HasArrayBuffer(collection.mutable.ArrayBuffer(1, 2, 3))
+    }
   }
 }
-
