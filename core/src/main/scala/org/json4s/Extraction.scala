@@ -427,15 +427,27 @@ object Extraction {
     }
 
     def result: Any = {
+      lazy val noArgsConstructor = try {
+        Some(tpe.erasure.getConstructor())
+      } catch {
+        case _: NoSuchMethodException =>
+          None
+      }
+
       val custom = formats.customDeserializer(formats)
       if (custom.isDefinedAt(tpe.typeInfo, json)) custom(tpe.typeInfo, json)
       else if (tpe.erasure == classOf[List[_]]) mkCollection(a => List(a: _*))
       else if (tpe.erasure == classOf[Set[_]]) mkCollection(a => Set(a: _*))
       else if (tpe.erasure == classOf[scala.collection.mutable.Set[_]]) mkCollection(a => scala.collection.mutable.Set(a: _*))
       else if (tpe.erasure == classOf[scala.collection.mutable.Seq[_]]) mkCollection(a => scala.collection.mutable.Seq(a: _*))
-      else if (tpe.erasure == classOf[java.util.ArrayList[_]]) mkCollection(a => new java.util.ArrayList[Any](a.toList.asJavaCollection))
       else if (tpe.erasure.isArray) mkCollection(mkTypedArray)
-      else if (classOf[scala.collection.generic.GenericTraversableTemplate[_, Any]].isAssignableFrom(tpe.erasure)) {
+      else if (classOf[java.util.Collection[_]].isAssignableFrom(tpe.erasure) && noArgsConstructor.isDefined) {
+        mkCollection{ a =>
+          val xs = noArgsConstructor.get.newInstance().asInstanceOf[java.util.Collection[Any]]
+          xs.addAll(a.toSeq.asJava.asInstanceOf[java.util.Collection[Any]])
+          xs
+        }
+      } else if (classOf[scala.collection.generic.GenericTraversableTemplate[_, Any]].isAssignableFrom(tpe.erasure)) {
         reflect.ScalaSigReader.companions(tpe.erasure.getName) match {
           case Some(tuple) => // can't `case Some((_, Some(c)))` due to Scala 2.10 bug
             tuple match {

@@ -269,6 +269,15 @@ abstract class ExtractionExamples[T](mod: String, ser : json4s.Serialization) ex
       json.extract[collection.mutable.ArraySeq[Name]] must_== collection.mutable.ArraySeq(Name("Mary"), Name("Mazy"))
     }
 
+    "java.util.ArrayList extraction example" in {
+      val json = parse(testJson) \ "children"
+      val expect = new java.util.ArrayList[Name]()
+      expect.add(Name("Mary"))
+      expect.add(Name("Mazy"))
+      val x = json.extract[java.util.ArrayList[Name]]
+      x must_== expect
+    }
+
     "Extraction and decomposition are symmetric" in {
       val person = parse(testJson).extract[Person]
       Extraction.decompose(person).extract[Person] must_== person
