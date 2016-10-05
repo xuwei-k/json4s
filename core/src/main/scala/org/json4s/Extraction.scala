@@ -31,7 +31,8 @@ import scala.collection.JavaConverters._
 object Extraction {
 
   /** Extract a case class from JSON.
-   * @see org.json4s.JsonAST.JValue#extract
+    *
+    * @see org.json4s.JsonAST.JValue#extract
    * @throws MappingException is thrown if extraction fails
    */
   def extract[A](json: JValue)(implicit formats: Formats, mf: Manifest[A]): A = {
@@ -45,7 +46,8 @@ object Extraction {
   }
 
   /** Extract a case class from JSON.
-   * @see org.json4s.JsonAST.JValue#extract
+    *
+    * @see org.json4s.JsonAST.JValue#extract
    */
   def extractOpt[A](json: JValue)(implicit formats: Formats, mf: Manifest[A]): Option[A] =
     try { Option(extract(json)(formats, mf)) } catch { case _: MappingException => None }
@@ -60,7 +62,7 @@ object Extraction {
    * Extraction.decompose(Person("joe", 25)) == JObject(JField("age",JInt(25)) :: JField("name",JString("joe")) :: Nil)
    * </pre>
    */
-  def decomposeWithBuilder[T](a: Any, builder: JsonWriter[T])(implicit formats: Formats): T = {
+  def decomposeWithBuilder[T](a: Any, builder: JsonWriter[T])(implicit formats: Formats): Option[T] = {
     internalDecomposeWithBuilder(a,builder)(formats)
     builder.result
   }
@@ -238,7 +240,7 @@ object Extraction {
    * Extraction.decompose(Person("joe", 25)) == JObject(JField("age",JInt(25)) :: JField("name",JString("joe")) :: Nil)
    * </pre>
    */
-  def decompose(a: Any)(implicit formats: Formats): JValue =
+  def decompose(a: Any)(implicit formats: Formats): Option[JValue] =
     decomposeWithBuilder(a, if (formats.wantsBigDecimal) JsonWriter.bigDecimalAst else JsonWriter.ast)
 
   private[this] def writePrimitive(a: Any, builder: JsonWriter[_])(implicit formats: Formats) = a match {
@@ -273,7 +275,7 @@ object Extraction {
 
     def flatten0(path: String, json: JValue): Map[String, String] = {
       json match {
-        case JNothing | JNull    => Map()
+        case JNull               => Map.empty
         case JString(s)          => Map(path -> ("\"" + ParserUtil.quote(s) + "\""))
         case JDouble(num)        => Map(path -> num.toString)
         case JDecimal(num)       => Map(path -> num.toString)
@@ -298,11 +300,10 @@ object Extraction {
 
   /** Unflattens a key/value map to a JSON object.
    */
-  def unflatten(map: Map[String, String], useBigDecimalForDouble: Boolean = false, useBigIntForLong: Boolean = true): JValue = {
+  def unflatten(map: Map[String, String], useBigDecimalForDouble: Boolean = false, useBigIntForLong: Boolean = true): Option[JValue] = {
     import scala.util.matching.Regex
 
-    def extractValue(value: String): JValue = value.toLowerCase match {
-      case ""      => JNothing
+    def extractValue(value: String): Option[JValue] = PartialFunction.condOpt(value.toLowerCase) {
       case "null"  => JNull
       case "true"  => JBool.True
       case "false" => JBool.False
@@ -339,13 +340,23 @@ object Extraction {
         }
     }.toList.sortWith(_ < _) // Sort is necessary to get array order right
 
-    uniquePaths.foldLeft[JValue](JNothing) { (jvalue, key) =>
-      jvalue.merge(key match {
-        case ArrayProp(p, f, i) => JObject(List(JField(f, unflatten(submap(key)))))
-        case ArrayElem(p, i)    => JArray(List(unflatten(submap(key))))
-        case OtherProp(p, f)    => JObject(List(JField(f, unflatten(submap(key)))))
-        case ""                 => extractValue(map(key))
-      })
+    uniquePaths.foldLeft[Option[JValue]](None) { (jvalue, key) =>
+      jvalue match {
+        case Some(j) =>
+          val z = key match {
+            case ArrayProp(p, f, i) =>
+              unflatten(submap(key)).map(x => JObject(List(JField(f, x))))
+            case ArrayElem(p, i) =>
+              unflatten(submap(key)).map(x => JArray(List(x)))
+            case OtherProp(p, f) =>
+              unflatten(submap(key)).map(x => JObject(List(JField(f, x))))
+            case "" =>
+              extractValue(map(key))
+          }
+          z.map(j merge _)
+        case None =>
+          None
+      }
     }
   }
 
@@ -396,7 +407,7 @@ object Extraction {
     private[this] def mkCollection(constructor: Array[_] => Any) = {
       val array: Array[_] = json match {
         case JArray(arr)      => arr.map(extract(_, typeArg)).toArray
-        case JNothing | JNull => Array[AnyRef]()
+        case JNull => Array[AnyRef]()
         case x                => fail("Expected collection but got " + x + " for root " + json + " and mapping " + tpe)
       }
 
@@ -496,10 +507,10 @@ object Extraction {
     private[this] def buildCtorArg(json: JValue, descr: ConstructorParamDescriptor) = {
       val default = descr.defaultValue
       def defv(v: Any) = if (default.isDefined) default.get() else v
-      if (descr.isOptional && json == JNothing) defv(None)
+      if (descr.isOptional) defv(None)
       else {
         try {
-          val x = if (json == JNothing && default.isDefined) default.get() else extract(json, descr.argType)
+          val x = if (default.isDefined) default.get() else extract(json, descr.argType)
           if (descr.isOptional) { if (x == null) defv(None) else x }
           else if (x == null) {
             if(!default.isDefined && descr.argType <:< ScalaType(manifest[AnyVal])) {
@@ -531,7 +542,7 @@ object Extraction {
         case other: JValue => other
       }
 
-      val args = constructor.params.map(a => buildCtorArg(deserializedJson \ a.name, a))
+      val args = constructor.params.flatMap(a => (deserializedJson \ a.name).map(buildCtorArg(_, a)))
       try {
         if (jconstructor.getDeclaringClass == classOf[java.lang.Object]) {
           deserializedJson match {
@@ -688,8 +699,6 @@ object Extraction {
       case JNull if formats.allowNull => null
       case JNull if !formats.allowNull =>
         fail("Did not find value which can be converted into " + targetType.getName)
-      case JNothing =>
-        default map (_.apply()) getOrElse fail("Did not find value which can be converted into " + targetType.getName)
       case _ =>
         val custom = formats.customDeserializer(formats)
         val typeInfo = target.typeInfo

@@ -73,11 +73,6 @@ trait JsonDSL extends Implicits {
   implicit def map2jvalue[A](m: Map[String, A])(implicit ev: A => JValue) =
     JObject(m.toList.map { case (k, v) ⇒ JField(k, v) })
 
-  implicit def option2jvalue[A](opt: Option[A])(implicit ev: A => JValue): JValue = opt match {
-    case Some(x) ⇒ x
-    case None ⇒ JNothing
-  }
-
   implicit def symbol2jvalue(x: Symbol) = JString(x.name)
   implicit def pair2jvalue[A](t: (String, A))(implicit ev: A => JValue) = JObject(List(JField(t._1, t._2)))
   implicit def list2jvalue(l: List[JField]) = JObject(l)

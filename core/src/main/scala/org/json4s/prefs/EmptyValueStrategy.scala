@@ -1,6 +1,6 @@
 package org.json4s.prefs
 
-import org.json4s.{JValue, JArray, JField, JObject, JNothing, JNull}
+import org.json4s.{JValue, JArray, JField, JObject, JNull}
 
 /**
  * Strategies for empty values treatment.
@@ -35,7 +35,6 @@ object EmptyValueStrategy {
       case JObject(fields) => JObject(fields map {
         case JField(name, value) => JField(name, replaceEmpty(value))
       })
-      case JNothing => JNull
       case oth => oth
     }
   }

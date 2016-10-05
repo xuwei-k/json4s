@@ -178,7 +178,6 @@ object Xml {
       case JString(x) => new XmlElem(name, x)
       case JBool(x) => new XmlElem(name, x.toString)
       case JNull => new XmlElem(name, "null")
-      case JNothing => Text("")
     }
 
     json match {

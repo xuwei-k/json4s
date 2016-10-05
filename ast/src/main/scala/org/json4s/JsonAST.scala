@@ -22,10 +22,10 @@ object JsonAST {
    * Concatenates a sequence of <code>JValue</code>s.
    * <p>
    * Example:<pre>
-   * concat(JInt(1), JInt(2)) == JArray(List(JInt(1), JInt(2)))
+   * concat(JInt(1), JInt(2)) == Some(JArray(List(JInt(1), JInt(2))))
    * </pre>
    */
-  def concat(xs: JValue*) = xs.foldLeft(JNothing: JValue)(_ ++ _)
+  def concat(xs: JValue*): Option[JValue] = xs.reduceLeftOption(_ ++ _)
 
   object JValue extends Merge.Mergeable
 
@@ -61,28 +61,25 @@ object JsonAST {
 
     /**
      * Return nth element from JSON.
-     * Meaningful only to JArray, JObject and JField. Returns JNothing for other types.
+     * Meaningful only to JArray, JObject and JField. Returns None for other types.
      * <p>
      * Example:<pre>
-     * JArray(JInt(1) :: JInt(2) :: Nil)(1) == JInt(2)
+     * JArray(JInt(1) :: JInt(2) :: Nil)(1) == Some(JInt(2))
      * </pre>
      */
-    def apply(i: Int): JValue = JNothing
+    def apply(i: Int): Option[JValue] = None
 
 
     /**
      * Concatenate with another JSON.
-     * This is a concatenation monoid: (JValue, ++, JNothing)
      * <p>
      * Example:<pre>
      * JArray(JInt(1) :: JInt(2) :: Nil) ++ JArray(JInt(3) :: Nil) ==
      * JArray(List(JInt(1), JInt(2), JInt(3)))
      * </pre>
      */
-    def ++(other: JValue) = {
+    def ++(other: JValue): JValue = {
       def append(value1: JValue, value2: JValue): JValue = (value1, value2) match {
-        case (JNothing, x) ⇒ x
-        case (x, JNothing) ⇒ x
         case (JArray(xs), JArray(ys)) ⇒ JArray(xs ::: ys)
         case (JArray(xs), v: JValue) ⇒ JArray(xs ::: List(v))
         case (v: JValue, JArray(xs)) ⇒ JArray(v :: xs)
@@ -92,35 +89,27 @@ object JsonAST {
     }
 
     /**
-     * When this [[org.json4s.JsonAST.JValue]] is a [[org.json4s.JsonAST.JNothing]] or a [[org.json4s.JsonAST.JNull]], this method returns [[scala.None]]
+     * When this [[org.json4s.JsonAST.JValue]] is a [[org.json4s.JsonAST.JNull]], this method returns [[scala.None]]
      * When it has a value it will return [[scala.Some]]
      */
     @deprecated("Use toOption instead", "3.1.0")
     def toOpt: Option[JValue] = toOption
     
     /**
-     * When this [[org.json4s.JsonAST.JValue]] is a [[org.json4s.JsonAST.JNothing]] or a [[org.json4s.JsonAST.JNull]], this method returns [[scala.None]]
+     * When this [[org.json4s.JsonAST.JValue]] is a [[org.json4s.JsonAST.JNull]], this method returns [[scala.None]]
      * When it has a value it will return [[scala.Some]]
      */
     def toOption: Option[JValue] = this match {
-      case JNothing | JNull ⇒ None
+      case JNull ⇒ None
       case json ⇒ Some(json)
     }
 
     /**
-     * When this [[org.json4s.JsonAST.JValue]] is a [[org.json4s.JsonAST.JNothing]], this method returns [[scala.None]]
-     * When it has a value it will return [[scala.Some]]
      */
-    def toSome: Option[JValue] = this match {
-      case JNothing => None
-      case json => Some(json)
-    }
+    @deprecated("always return Some", "3.5")
+    def toSome: Option[JValue] = Some(this)
   }
 
-  case object JNothing extends JValue {
-    type Values = None.type
-    def values = None
-  }
   case object JNull extends JValue {
     type Values = Null
     def values = null
@@ -173,7 +162,7 @@ object JsonAST {
   case class JArray(arr: List[JValue]) extends JValue {
     type Values = List[Any]
     def values = arr.map(_.values)
-    override def apply(i: Int): JValue = arr(i)
+    override def apply(i: Int): Option[JValue] = Some(arr(i))
   }
 
   type JField = (String, JValue)

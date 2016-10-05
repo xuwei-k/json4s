@@ -12,13 +12,14 @@ class MonadicJValue(jv: JValue) {
    * json \ "name"
    * </pre>
    */
-  def \(nameToFind: String): JValue = jv match {
-    case JArray(xs) => JArray(findDirectByName(xs, nameToFind))
+  def \(nameToFind: String): Option[JValue] = jv match {
+    case JArray(xs) =>
+      Some(JArray(findDirectByName(xs, nameToFind)))
     case _ =>
       findDirectByName(List(jv), nameToFind) match {
-        case Nil ⇒ JNothing
-        case x :: Nil ⇒ x
-        case x ⇒ JArray(x)
+        case Nil ⇒ None
+        case x :: Nil ⇒ Some(x)
+        case x ⇒ Some(JArray(x))
       }
   }
 
@@ -309,12 +310,12 @@ class MonadicJValue(jv: JValue) {
    * JArray(JInt(1) :: JInt(2) :: JNull :: Nil) remove { _ == JNull }
    * </pre>
    */
-  def remove(p: JValue ⇒ Boolean): JValue = {
-    if(p(jv)) JNothing
-    else jv transform {
+  def remove(p: JValue ⇒ Boolean): Option[JValue] = {
+    if(p(jv)) None
+    else Some(jv transform {
       case JObject(l) => JObject(l.filterNot(f ⇒ p(f._2)))
       case JArray(l) => JArray(l.filterNot(p))
-    }
+    })
   }
 
   private[this] def camelize(word: String): String = {
@@ -363,11 +364,11 @@ class MonadicJValue(jv: JValue) {
     }
 
   /**
-   * Remove the [[org.json4s.JsonAST.JNothing]] and [[org.json4s.JsonAST.JNull]] from
+   * Remove the [[org.json4s.JsonAST.JNull]] from
    * a [[org.json4s.JsonAST.JArray]] or [[org.json4s.JsonAST.JObject]]
    */
-  def noNulls = remove {
-    case JNull | JNothing => true
+  def noNulls: Option[JValue] = remove {
+    case JNull => true
     case _ => false
   }
 

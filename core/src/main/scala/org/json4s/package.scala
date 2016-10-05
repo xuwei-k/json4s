@@ -21,7 +21,6 @@ package object json4s {
 
 
   type JValue   = JsonAST.JValue
-  val  JNothing = JsonAST.JNothing
   val  JNull    = JsonAST.JNull
   type JString  = JsonAST.JString
   val  JString  = JsonAST.JString

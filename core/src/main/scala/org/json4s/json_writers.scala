@@ -26,12 +26,12 @@ trait JsonWriter[T] {
   def double(value: Double): JsonWriter[T]
   def bigDecimal(value: BigDecimal): JsonWriter[T]
   def startField(name: String): JsonWriter[T]
-  def result: T
+  def result: Option[T]
 
   def addJValue(jv: JValue): JsonWriter[T]
 }
 private final class JDoubleJFieldJsonWriter(name: String, parent: JDoubleJObjectJsonWriter) extends JDoubleAstJsonWriter {
-  def result: JValue = JNothing
+  def result = None
 
 
   def addNode(node: JValue): JsonWriter[JValue] = parent.addNode(name -> node)
@@ -45,12 +45,10 @@ private final class JDoubleAstRootJsonWriter extends JDoubleAstJsonWriter {
     nodes ::= node
     this
   }
-  def result: JValue = {
-    if (nodes.nonEmpty) nodes.head else JNothing
-  }
+  def result: Option[JValue] = nodes.headOption
 }
 private final class JDecimalJFieldJsonWriter(name: String, parent: JDecimalJObjectJsonWriter) extends JDecimalAstJsonWriter {
-  def result: JValue = JNothing
+  def result: Option[JValue] = None
 
 
   def addNode(node: JValue): JsonWriter[JValue] = parent.addNode(name -> node)
@@ -64,9 +62,7 @@ private final class JDecimalAstRootJsonWriter extends JDecimalAstJsonWriter {
     nodes ::= node
     this
   }
-  def result: JValue = {
-    if (nodes.nonEmpty) nodes.head else JNothing
-  }
+  def result: Option[JValue] = nodes.headOption
 }
 private final class JDoubleJObjectJsonWriter(parent: JsonWriter[JValue]) extends JsonWriter[JValue] {
   private[this] val nodes = ListBuffer[JField]()
@@ -86,7 +82,7 @@ private final class JDoubleJObjectJsonWriter(parent: JsonWriter[JValue]) extends
 
   def endObject(): JsonWriter[JValue] = {
     parent match {
-      case p: JDoubleAstJsonWriter => p.addNode(result)
+      case p: JDoubleAstJsonWriter => result.map(p.addNode(_))
       case _ => parent
     }
   }
@@ -127,7 +123,7 @@ private final class JDoubleJObjectJsonWriter(parent: JsonWriter[JValue]) extends
   def addJValue(jv: _root_.org.json4s.JValue): JsonWriter[_root_.org.json4s.JValue] =
     sys.error("You have to start a field to be able to end it (addJValue called before startField in a JObject builder)")
 
-  def result: JValue = JObject(nodes.toList)
+  def result: Option[JValue] = Some(JObject(nodes.toList))
 }
 private final class JDecimalJObjectJsonWriter(parent: JsonWriter[JValue]) extends JsonWriter[JValue] {
   private[this] val nodes = ListBuffer[JField]()
@@ -540,12 +536,10 @@ private sealed abstract class StreamingJsonWriter[T <: JWriter] extends JsonWrit
     case JObject(flds) =>
       val obj = startObject()
       flds foreach {
-        case (k, v) if v == JNothing => this
         case (k, v) => obj.startField(k).addJValue(v)
       }
       obj.endObject()
 
-    case JNothing => this
   }
 
   protected def writePretty(outdent: Int = 0): Unit = {
