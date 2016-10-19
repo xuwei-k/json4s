@@ -14,10 +14,10 @@ cache:
 before_install:
   - export TZ=Australia/Canberra
 script:
-  #- travis_retry sbt ++$TRAVIS_SCALA_VERSION mimaReportBinaryIssues test
-  - travis_retry sbt ++$TRAVIS_SCALA_VERSION javaVersionCheck test
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+  - sbt ++$TRAVIS_SCALA_VERSION test:compile
+  - echo "sbt.version=0.13.12" > project/build.properties
+  - sbt ++$TRAVIS_SCALA_VERSION test:compile
+  - sbt ++$TRAVIS_SCALA_VERSION clean test:compile
 addons:
   apt:
     packages:
