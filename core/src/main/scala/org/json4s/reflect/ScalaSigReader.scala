@@ -30,12 +30,10 @@ object ScalaSigReader {
 
   def readField(name: String, clazz: Class[_], typeArgIndex: Int): Class[_] = {
     def read(current: Class[_]): MethodSymbol = {
-      if (current == classOf[java.lang.Object])
+      if (current == null)
         fail("Can't find field " + name + " from " + clazz)
       else
-        findField(current, name)
-          .orElse(current.getInterfaces.flatMap(findField(_, name)).headOption)
-          .getOrElse(read(current.getSuperclass))
+        findField(findClass(current), name).getOrElse(read(current.getSuperclass))
     }
     findArgTypeForField(read(clazz), typeArgIndex)
   }
@@ -65,13 +63,12 @@ object ScalaSigReader {
     ms.find(m => m.children.map(_.name) == argNames)
   }
 
+
+
   def findFields(c: ClassSymbol): Seq[MethodSymbol] =
     c.children collect {
       case m: MethodSymbol if m.infoType.isInstanceOf[NullaryMethodType] && !m.isSynthetic => m
     }
-
-
-  private def findField(clazz: Class[_], name: String): Option[MethodSymbol] = findField(findClass(clazz), name)
 
   private def findField(c: ClassSymbol, name: String): Option[MethodSymbol] =
     (c.children collect { case m: MethodSymbol if m.name == name => m }).headOption

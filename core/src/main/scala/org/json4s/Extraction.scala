@@ -367,11 +367,9 @@ object Extraction {
         case x => fail("Expected object with 1 element but got " + x)
       }
     } else {
-      customOrElse(scalaType, json) { _ =>
-        Reflector.describe(scalaType) match {
-          case PrimitiveDescriptor(tpe, default) => convert(json, tpe, formats, default)
-          case c: ClassDescriptor => new ClassInstanceBuilder(json, c).result
-        }
+      Reflector.describe(scalaType) match {
+        case PrimitiveDescriptor(tpe, default) => convert(json, tpe, formats, default) //customOrElse(tpe, json)(convert(_, tpe, formats, default))
+        case c: ClassDescriptor => new ClassInstanceBuilder(json, c).result
       }
     }
   }
@@ -526,7 +524,7 @@ object Extraction {
     }
 
     def result: Any =
-      json match {
+      customOrElse(descr.erasure, json){
         case JNull => null
         case JObject(TypeHint(t, fs)) => mkWithTypeHint(t, fs, descr.erasure)
         case _ => instantiate
