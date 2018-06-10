@@ -2,7 +2,7 @@ package org.json4s.scalap
 package scalasig
 
 import language.postfixOps
-
+import ClassFileParser.ElementValue
 import java.io.IOException
 
 object ByteCode {
@@ -70,11 +70,6 @@ class ByteCode(val bytes: Array[Byte], val pos: Int, val length: Int) {
 
   def byte(i: Int) = bytes(pos) & 0xFF
 }
-
-/**
- * The wrapper for decode UTF-8 string
- */
-case class StringBytesPair(string: String, bytes: Array[Byte])
 
 /** Provides rules for parsing byte-code.
 */
@@ -153,13 +148,20 @@ object ClassFileParser extends ByteCodeReader {
   val attributes = u2 >> attribute.times
 
   // parse runtime-visible annotations
-  abstract class ElementValue
+  sealed abstract class ElementValue extends Product with Serializable
   case class AnnotationElement(elementNameIndex: Int, elementValue: ElementValue)
   case class ConstValueIndex(index: Int) extends ElementValue
   case class EnumConstValue(typeNameIndex: Int, constNameIndex: Int) extends ElementValue
   case class ClassInfoIndex(index: Int) extends ElementValue
   case class Annotation(typeIndex: Int, elementValuePairs: Seq[AnnotationElement]) extends ElementValue
   case class ArrayValue(values: Seq[ElementValue]) extends ElementValue
+  /**
+   * The wrapper for decode UTF-8 string
+   */
+  case class StringBytesPair(string: String, bytes: Array[Byte]) extends ElementValue
+  case class Ohter(value: String) extends ElementValue {
+    override def toString = value
+  }
 
   def element_value: Parser[ElementValue] = u1 >> {
     case 'B'|'C'|'D'|'F'|'I'|'J'|'S'|'Z'|'s' => u2 ^^ ConstValueIndex
@@ -187,8 +189,8 @@ object ClassFileParser extends ByteCodeReader {
     case classRef ~ nameAndTypeRef => pool => description + ": " + pool(classRef) + ", " + pool(nameAndTypeRef)
   }
 
-  def add1[T](f: T => ConstantPool => Any)(raw: T)(pool: ConstantPool) = pool add f(raw)
-  def add2[T](f: T => ConstantPool => Any)(raw: T)(pool: ConstantPool) = pool add f(raw) add { pool => "<empty>" }
+  def add1[T](f: T => ConstantPool => ElementValue)(raw: T)(pool: ConstantPool) = pool add f(raw)
+  def add2[T](f: T => ConstantPool => ElementValue)(raw: T)(pool: ConstantPool) = pool add f(raw) add { pool => "<empty>" }
 }
 
 case class ClassFile(
@@ -239,8 +241,8 @@ case class ClassFileHeader(
 case class ConstantPool(len: Int) {
   val size = len - 1
 
-  private[this] val buffer = new scala.collection.mutable.ArrayBuffer[ConstantPool => Any]
-  private[this] val values = Array.fill[Option[Any]](size)(None)
+  private[this] val buffer = new scala.collection.mutable.ArrayBuffer[ConstantPool => ElementValue]
+  private[this] val values = Array.fill[Option[ElementValue]](size)(None)
 
   def isFull = buffer.length >= size
 
@@ -255,7 +257,7 @@ case class ConstantPool(len: Int) {
     }
   }
 
-  def add(f: ConstantPool => Any) = {
+  def add(f: ConstantPool => ElementValue): this.type = {
     buffer += f
     this
   }
