@@ -302,6 +302,9 @@ object Extraction {
     flatten0("", json)
   }
 
+  private[this] val ArrayProp = new Regex("""^(\.([^\.\[]+))\[(\d+)\].*$""")
+  private[this] val ArrayElem = new Regex("""^(\[(\d+)\]).*$""")
+  private[this] val OtherProp = new Regex("""^(\.([^\.\[]+)).*$""")
 
   /** Unflattens a key/value map to a JSON object.
    */
@@ -331,10 +334,6 @@ object Extraction {
       map.withFilter(t => t._1.startsWith(prefix)).map(
         t => (t._1.substring(prefix.length), t._2)
       )
-
-    val ArrayProp = new Regex("""^(\.([^\.\[]+))\[(\d+)\].*$""")
-    val ArrayElem = new Regex("""^(\[(\d+)\]).*$""")
-    val OtherProp = new Regex("""^(\.([^\.\[]+)).*$""")
 
     val uniquePaths = map.keys.foldLeft[Set[String]](Set()) {
       (set, key) =>
