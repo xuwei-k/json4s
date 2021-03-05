@@ -1,5 +1,8 @@
 package org.json4s
 
+import org.json4s.JsonAST.JArray
+import org.json4s.JsonAST.JValue
+
 private[json4s] trait DefaultReaders0 {
   implicit def iterableReader[F[_], V](implicit f: scala.collection.Factory[V, F[V]], valueReader: Reader[V]): Reader[F[V]] =
     new Reader[F[V]] {

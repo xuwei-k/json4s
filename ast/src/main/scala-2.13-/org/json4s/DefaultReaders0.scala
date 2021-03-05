@@ -1,6 +1,8 @@
 package org.json4s
 
 import scala.collection.generic.CanBuildFrom
+import org.json4s.JsonAST.JArray
+import org.json4s.JsonAST.JValue
 
 private[json4s] trait DefaultReaders0 {
   implicit def iterableReader[F[_], V](implicit cbf: CanBuildFrom[F[_], V, F[V]], valueReader: Reader[V]): Reader[F[V]] =

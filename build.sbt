@@ -47,12 +47,24 @@ lazy val core = Project(
     """.stripMargin,
 ) dependsOn(ast % "compile;test->test", scalap)
 
+lazy val nativeCore = Project(
+  id = "json4s-native-core",
+  base = file("native-core"),
+).settings(
+  json4sSettings,
+).dependsOn(
+  ast % "compile;test->test"
+)
+
 lazy val native = Project(
   id = "json4s-native",
   base = file("native"),
 ).settings(
   json4sSettings,
-) dependsOn(core % "compile;test->test")
+) dependsOn(
+  core % "compile;test->test",
+  nativeCore
+)
 
 lazy val json4sExt = Project(
   id = "json4s-ext",
