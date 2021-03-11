@@ -30,7 +30,7 @@ class ParserBugs extends AnyWordSpec {
         JsonParser.parse("\"", discardParser)
         fail("should be throw ParseException")
       } catch {
-        case e: ParserUtil.ParseException =>
+        case e: ParseException =>
           assert(e.getMessage.startsWith("unexpected eof"))
       }
     }

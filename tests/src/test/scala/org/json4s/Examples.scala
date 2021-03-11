@@ -205,12 +205,6 @@ abstract class Examples[T](mod: String) extends AnyWordSpec with JsonMethods[T] 
       assert({ parse("{\"a\" : []}") \ "a" \ "c" } == JNothing)
     }
 
-    "Unbox values using XPath-like type expression" in {
-      assert({ parse(objArray) \ "children" \\ classOf[JInt] } == List(5, 3))
-      assert({ parse(lotto) \ "lotto" \ "winning-numbers" \ classOf[JInt] } == List(2, 45, 34, 23, 7, 5, 3))
-      assert({ parse(lotto) \\ "winning-numbers" \ classOf[JInt] } == List(2, 45, 34, 23, 7, 5, 3))
-    }
-
     "Quoted example" in {
       val json = parse(quoted)
       assert(List("foo \" \n \t \r bar") == json.values)
@@ -333,10 +327,7 @@ abstract class Examples[T](mod: String) extends AnyWordSpec with JsonMethods[T] 
 
       // #131 Strategies for empty value treatment
       // https://github.com/json4s/json4s/pull/131
-      val preserve = new DefaultFormats {
-        override val emptyValueStrategy: EmptyValueStrategy = EmptyValueStrategy.preserve
-      }
-      assert(compact(render(a)(preserve)) == "[1,null,null,1]")
+      assert(compact(render(a, emptyValueStrategy = EmptyValueStrategy.preserve)) == "[1,null,null,1]")
     }
 
     "#146 Snake support with case classes" in {

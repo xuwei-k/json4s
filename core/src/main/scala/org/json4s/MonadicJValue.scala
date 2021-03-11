@@ -91,8 +91,6 @@ class MonadicJValue(jv: JValue) {
    * json \ classOf[JInt]
    * </pre>
    */
-  def \[A <: JValue](clazz: Class[A]): List[A#Values] =
-    findDirect(jv.children, typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values }
 
   /**
    * XPath-like expression to query JSON fields by type. Returns all matching fields.
@@ -101,8 +99,6 @@ class MonadicJValue(jv: JValue) {
    * json \\ classOf[JInt]
    * </pre>
    */
-  def \\[A <: JValue](clazz: Class[A]): List[A#Values] =
-    (jv filter typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values }
 
   private def typePredicate[A <: JValue](clazz: Class[A])(json: JValue) = json match {
     case x if x.getClass == clazz => true
