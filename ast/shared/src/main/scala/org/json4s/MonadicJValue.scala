@@ -1,8 +1,11 @@
 package org.json4s
 
 import java.util.Locale.ENGLISH
+import org.json4s.JsonAST.JField
 
 object MonadicJValue {
+
+  implicit def jvalueToMonadic(jv: JValue): MonadicJValue = new MonadicJValue(jv)
 
   /**
    * Extract path name from "foo[]"
@@ -108,7 +111,7 @@ class MonadicJValue(private val jv: JValue) extends AnyVal {
    * </pre>
    */
   def \[A <: JValue](clazz: Class[A]): List[A#Values] =
-    findDirect(jv.children, typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values }
+    findDirect(jv.children, typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values.asInstanceOf[A#Values] }
 
   /**
    * XPath-like expression to query JSON fields by type. Returns all matching fields.
@@ -118,7 +121,7 @@ class MonadicJValue(private val jv: JValue) extends AnyVal {
    * </pre>
    */
   def \\[A <: JValue](clazz: Class[A]): List[A#Values] =
-    (jv filter typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values }
+    (jv filter typePredicate(clazz) _).asInstanceOf[List[A]] map { _.values.asInstanceOf[A#Values] }
 
   private def typePredicate[A <: JValue](clazz: Class[A])(json: JValue) = json match {
     case x if x.getClass == clazz => true

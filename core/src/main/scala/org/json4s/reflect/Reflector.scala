@@ -154,7 +154,7 @@ object Reflector {
         case v: WildcardType =>
           val upper = v.getUpperBounds
           if (upper != null && upper.length > 0) scalaTypeOf(upper(0))
-          else scalaTypeOf[AnyRef]
+          else scalaTypeOf(Manifest.AnyVal)
         case x =>
           val st = scalaTypeOf(x)
           if (st.erasure == classOf[java.lang.Object]) {

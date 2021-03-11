@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.{DeserializationFeature, DeserializationCo
 import com.fasterxml.jackson.core.{JsonTokenId, JsonToken, JsonParser}
 import collection.mutable
 import org.json4s._
+import org.json4s.JsonAST.JField
 
 import scala.annotation.switch
 
