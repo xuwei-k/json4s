@@ -84,19 +84,17 @@ object ScalaSigAttributeParsers extends ByteCodeReader {
   val longValue = read(_.toLong)
 }
 
+case class Entry(index: Int, entryType: Int, byteCode: ByteCode, scalaSig: ScalaSig) extends DefaultMemoisable {
+  def setByteCode(byteCode: ByteCode): Entry = copy(byteCode = byteCode)
+}
+
 case class ScalaSig(majorVersion: Int, minorVersion: Int, table: Seq[Int ~ ByteCode]) extends DefaultMemoisable {
-
-  case class Entry(index: Int, entryType: Int, byteCode: ByteCode) extends DefaultMemoisable {
-    def scalaSig = ScalaSig.this
-
-    def setByteCode(byteCode: ByteCode) = Entry(index, entryType, byteCode)
-  }
 
   def hasEntry(index: Int) = table isDefinedAt index
 
   def getEntry(index: Int) = {
     val entryType ~ byteCode = table(index)
-    Entry(index, entryType, byteCode)
+    Entry(index, entryType, byteCode, this)
   }
 
   def parseEntry(index: Int) = applyRule(ScalaSigParsers.parseEntry(ScalaSigEntryParsers.entry)(index))
@@ -141,7 +139,7 @@ object ScalaSigParsers extends RulesWithState with MemoisableRules {
 object ScalaSigEntryParsers extends RulesWithState with MemoisableRules {
   import ScalaSigAttributeParsers.{nat, utf8, longValue}
 
-  type S = ScalaSig#Entry
+  type S = Entry
   type EntryParser[A] = Rule[A, String]
 
   implicit def byteCodeEntryParser[A](rule: ScalaSigAttributeParsers.Parser[A]): EntryParser[A] = apply { entry =>
