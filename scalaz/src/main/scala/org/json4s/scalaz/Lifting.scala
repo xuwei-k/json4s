@@ -18,6 +18,7 @@ package org.json4s
 package scalaz
 
 import _root_.scalaz._
+import org.json4s.JsonAST._
 
 trait Lifting { this: Types =>
   implicit class Func1ToJSON[A: JSONR, R](z: (A) => R) {

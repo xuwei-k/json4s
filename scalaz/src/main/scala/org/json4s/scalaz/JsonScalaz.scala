@@ -19,6 +19,7 @@ package scalaz
 
 import _root_.scalaz._
 import std.option._
+import org.json4s.JsonAST._
 
 trait Types {
   type Result[A] = ValidationNel[Error, A]

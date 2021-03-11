@@ -21,6 +21,7 @@ import _root_.scalaz._
 import std.list._
 import std.option._
 import syntax.traverse._
+import org.json4s.JsonAST._
 
 trait Base { this: Types =>
   implicit def boolJSON: JSON[Boolean] = new JSON[Boolean] {

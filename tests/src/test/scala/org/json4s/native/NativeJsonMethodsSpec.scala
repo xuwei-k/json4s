@@ -1,6 +1,7 @@
 package org.json4s
 package native
 
+import org.json4s.prefs.EmptyValueStrategy
 import org.specs2.mutable.Specification
 
 class NativeJsonMethodsSpec extends Specification {
@@ -75,7 +76,6 @@ class NativeJsonMethodsSpec extends Specification {
     }
 
     "produce JSON with empty fields preserved" in {
-      implicit val formats: Formats = DefaultFormats.preservingEmptyValues
 
       "from Seq(Some(1), None, None, Some(2))" in {
         val seq = Seq(Some(1), None, None, Some(2))
@@ -92,7 +92,7 @@ class NativeJsonMethodsSpec extends Specification {
             DocText("]")
           )
         )
-        render(seq) must_== expected
+        render(seq, emptyValueStrategy = EmptyValueStrategy.preserve) must_== expected
       }
 
       """from Map("a" -> Some(1), "b" -> None, "c" -> None, "d" -> Some(2))""" in {
@@ -119,7 +119,7 @@ class NativeJsonMethodsSpec extends Specification {
             DocCons(DocBreak, DocText("}"))
           )
         )
-        render(map) must_== expected
+        render(map, emptyValueStrategy = EmptyValueStrategy.preserve) must_== expected
       }
     }
 
