@@ -22,26 +22,19 @@ abstract class ScalaSigSymbol extends Symbol {
   def applyRule[A](rule: EntryParser[A]): A = expect(rule)(entry)
   def applyScalaSigRule[A](rule: ScalaSigParsers.Parser[A]) = ScalaSigParsers.expect(rule)(entry.scalaSig)
 
-  def entry: ScalaSig#Entry
+  def entry: Entry
   def index = entry.index
 
   lazy val children: Seq[Symbol] = applyScalaSigRule(ScalaSigParsers.symbols) filter (_.parent == Some(this))
   lazy val attributes: Seq[AttributeInfo] = applyScalaSigRule(ScalaSigParsers.attributes) filter (_.symbol == this)
 }
 
-case class ExternalSymbol(name: String, parent: Option[Symbol], entry: ScalaSig#Entry) extends ScalaSigSymbol {
+case class ExternalSymbol(name: String, parent: Option[Symbol], entry: Entry) extends ScalaSigSymbol {
   override def toString = path
   def hasFlag(flag: Long) = false
 }
 
-case class SymbolInfo(
-  name: String,
-  owner: Symbol,
-  flags: Int,
-  privateWithin: Option[AnyRef],
-  info: Int,
-  entry: ScalaSig#Entry
-) {
+case class SymbolInfo(name: String, owner: Symbol, flags: Int, privateWithin: Option[AnyRef], info: Int, entry: Entry) {
   def symbolString(any: AnyRef) = any match {
     case sym: SymbolInfoSymbol => sym.index.toString
     case other => other.toString
