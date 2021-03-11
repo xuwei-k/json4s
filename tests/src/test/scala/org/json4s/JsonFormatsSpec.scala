@@ -65,13 +65,11 @@ abstract class JsonFormatsSpec[T](mod: String) extends Specification with TypeHi
       val json = parse("""{"Script Small G": "\u210A"}""")
 
       "escaped" in {
-        implicit val formats: Formats = new DefaultFormats { override def alwaysEscapeUnicode: Boolean = true }
-        compact(render(json)) must_== "{\"Script Small G\":\"\\u210A\"}"
+        compact(render(json, alwaysEscapeUnicode = true)) must_== "{\"Script Small G\":\"\\u210A\"}"
       }
 
       "not escaped" in {
-        implicit val formats: Formats = DefaultFormats
-        compact(render(json)) must_== "{\"Script Small G\":\"\u210A\"}"
+        compact(render(json, alwaysEscapeUnicode = false)) must_== "{\"Script Small G\":\"\u210A\"}"
       }
     }
   }
