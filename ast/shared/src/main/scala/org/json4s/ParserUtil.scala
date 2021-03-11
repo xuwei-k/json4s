@@ -4,8 +4,6 @@ import scala.annotation.{switch, tailrec}
 
 object ParserUtil {
 
-  class ParseException(message: String, cause: Exception) extends Exception(message, cause)
-
   private[this] val EOF = -1.asInstanceOf[Char]
 
   def quote(s: String, alwaysEscapeUnicode: Boolean): String =

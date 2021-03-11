@@ -96,6 +96,7 @@ object build {
           Seq("-Xsource:3")
         case _ =>
           Seq(
+            "-rewrite",
             "-source",
             "3.0-migration",
           )

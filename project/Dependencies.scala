@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
@@ -13,7 +14,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.12.2"
   )
   lazy val scalaz_core = Def.setting(
-    "org.scalaz" %%% "scalaz-core" % "7.3.3"
+    "org.scalaz" %%% "scalaz-core" % "7.3.3" withDottyCompat scalaVersion.value
   )
   lazy val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.8"
   lazy val scalatest = Def.setting(
