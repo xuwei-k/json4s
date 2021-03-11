@@ -3,12 +3,13 @@ package org.json4s
 import java.io.{ StringWriter, Writer => JWriter }
 import scala.collection.mutable.ListBuffer
 import StreamingJsonWriter._
+import org.json4s.JsonAST._
 
 object JsonWriter {
   def ast: JsonWriter[JValue] = new JDoubleAstRootJsonWriter
   def bigDecimalAst: JsonWriter[JValue] = new JDecimalAstRootJsonWriter
-  def streaming[T <: java.io.Writer](writer: T)(implicit formats: Formats = DefaultFormats): JsonWriter[T] = new RootStreamingJsonWriter[T](writer, pretty = false, formats = formats)
-  def streamingPretty[T <: java.io.Writer](writer: T)(implicit formats: Formats = DefaultFormats): JsonWriter[T] = new RootStreamingJsonWriter[T](writer, pretty = true, formats = formats)
+  def streaming[T <: java.io.Writer](writer: T, alwaysEscapeUnicode: Boolean): JsonWriter[T] = new RootStreamingJsonWriter[T](writer, pretty = false, alwaysEscapeUnicode = alwaysEscapeUnicode)
+  def streamingPretty[T <: java.io.Writer](writer: T, alwaysEscapeUnicode: Boolean): JsonWriter[T] = new RootStreamingJsonWriter[T](writer, pretty = true, alwaysEscapeUnicode = alwaysEscapeUnicode)
 }
 trait JsonWriter[T] {
   def startArray(): JsonWriter[T]
@@ -124,7 +125,7 @@ private final class JDoubleJObjectJsonWriter(parent: JsonWriter[JValue]) extends
   def startField(name: String): JsonWriter[JValue] = new JDoubleJFieldJsonWriter(name, this)
 
 
-  def addJValue(jv: _root_.org.json4s.JValue): JsonWriter[_root_.org.json4s.JValue] =
+  def addJValue(jv: JValue): JsonWriter[JValue] =
     sys.error("You have to start a field to be able to end it (addJValue called before startField in a JObject builder)")
 
   def result: JValue = JObject(nodes.toList)
@@ -185,7 +186,7 @@ private final class JDecimalJObjectJsonWriter(parent: JsonWriter[JValue]) extend
   def startField(name: String): JsonWriter[JValue] = new JDecimalJFieldJsonWriter(name, this)
 
 
-  def addJValue(jv: _root_.org.json4s.JValue): JsonWriter[_root_.org.json4s.JValue] =
+  def addJValue(jv: JValue): JsonWriter[JValue] =
     sys.error("You have to start a field to be able to end it (addJValue called before startField in a JObject builder)")
 
   def result: JValue = JObject(nodes.toList:_*)
@@ -300,18 +301,18 @@ private final class FieldStreamingJsonWriter[T <: JWriter](
   parent: ObjectStreamingJsonWriter[T],
   protected[this] val pretty: Boolean,
   protected[this] val spaces: Int,
-  protected[this] val formats: Formats) extends StreamingJsonWriter[T] {
+  protected[this] val alwaysEscapeUnicode: Boolean) extends StreamingJsonWriter[T] {
 
   def result: T = nodes
 
   override def startArray(): JsonWriter[T] = {
     writeName(hasPretty = true)
-    new ArrayStreamingJsonWriter(nodes, level + 1, parent, pretty, spaces, formats)
+    new ArrayStreamingJsonWriter(nodes, level + 1, parent, pretty, spaces, alwaysEscapeUnicode)
   }
 
   override def startObject(): JsonWriter[T] = {
     writeName(hasPretty = true)
-    new ObjectStreamingJsonWriter(nodes, level + 1, parent, pretty, spaces, formats)
+    new ObjectStreamingJsonWriter(nodes, level + 1, parent, pretty, spaces, alwaysEscapeUnicode)
   }
 
   // FIXME: hasPretty is no longer used?
@@ -321,7 +322,7 @@ private final class FieldStreamingJsonWriter[T <: JWriter](
       writePretty()
     }
     nodes.append("\"")
-    ParserUtil.quote(name, nodes)(formats)
+    ParserUtil.quote(name, nodes, alwaysEscapeUnicode)
     nodes.append("\":")
   }
 
@@ -334,7 +335,7 @@ private final class FieldStreamingJsonWriter[T <: JWriter](
   def addAndQuoteNode(node: String): JsonWriter[T] = {
     writeName(hasPretty = false)
     nodes.append("\"")
-    ParserUtil.quote(node, nodes)(formats)
+    ParserUtil.quote(node, nodes, alwaysEscapeUnicode = alwaysEscapeUnicode)
     nodes.append("\"")
     parent
   }
@@ -345,7 +346,7 @@ private final class ObjectStreamingJsonWriter[T <: JWriter](
   parent: StreamingJsonWriter[T],
   protected[this] val pretty: Boolean,
   protected[this] val spaces: Int,
-  protected[this] val formats: Formats
+  protected[this] val alwaysEscapeUnicode: Boolean
 ) extends StreamingJsonWriter[T] {
   nodes write '{'
   writePretty()
@@ -370,7 +371,7 @@ private final class ObjectStreamingJsonWriter[T <: JWriter](
     if (isFirst) isFirst = false
     else nodes.append(",")
     nodes.append("\"")
-    ParserUtil.quote(node, nodes)(formats)
+    ParserUtil.quote(node, nodes, alwaysEscapeUnicode)
     nodes.append("\"")
     this
   }
@@ -417,7 +418,7 @@ private final class ObjectStreamingJsonWriter[T <: JWriter](
     sys.error("You have to start a field to be able to end it (bigDecimal called before startField in a JObject builder)")
 
   override def startField(name: String): JsonWriter[T] = {
-    val r = new FieldStreamingJsonWriter(name, isFirst, nodes, level, this, pretty, spaces, formats)
+    val r = new FieldStreamingJsonWriter(name, isFirst, nodes, level, this, pretty, spaces, alwaysEscapeUnicode)
     if (isFirst) isFirst = false
     r
   }
@@ -428,7 +429,7 @@ private final class ArrayStreamingJsonWriter[T <: JWriter](
   parent: StreamingJsonWriter[T],
   protected[this] val pretty: Boolean,
   protected[this] val spaces: Int,
-  protected[this] val formats: Formats
+  protected[this] val alwaysEscapeUnicode: Boolean
 ) extends StreamingJsonWriter[T] {
   nodes.write('[')
   writePretty()
@@ -468,7 +469,7 @@ private final class ArrayStreamingJsonWriter[T <: JWriter](
   def addAndQuoteNode(node: String): JsonWriter[T] = {
     writeComma()
     nodes.append("\"")
-    ParserUtil.quote(node, nodes)(formats)
+    ParserUtil.quote(node, nodes, alwaysEscapeUnicode = alwaysEscapeUnicode)
     nodes.append("\"")
     this
   }
@@ -477,7 +478,7 @@ private final class RootStreamingJsonWriter[T <: JWriter](
   protected[this] val nodes: T = new StringWriter(),
   protected[this] val pretty: Boolean = false,
   protected[this] val spaces: Int = 2,
-  protected[this] val formats: Formats = DefaultFormats
+  protected[this] val alwaysEscapeUnicode: Boolean = false
 ) extends StreamingJsonWriter[T] {
 
   protected[this] val level: Int = 0
@@ -490,7 +491,7 @@ private final class RootStreamingJsonWriter[T <: JWriter](
 
   def addAndQuoteNode(node: String): JsonWriter[T] = {
     nodes.append("\"")
-    ParserUtil.quote(node, nodes)(formats)
+    ParserUtil.quote(node, nodes, alwaysEscapeUnicode = alwaysEscapeUnicode)
     nodes.append("\"")
     this
   }
@@ -504,14 +505,14 @@ private sealed abstract class StreamingJsonWriter[T <: JWriter] extends JsonWrit
   protected[this] def spaces: Int
   protected[this] def pretty: Boolean
   protected[this] def nodes: T
-  protected[this] val formats: Formats
+  protected[this] val alwaysEscapeUnicode: Boolean
 
   def startArray(): JsonWriter[T] = {
-    new ArrayStreamingJsonWriter(nodes, level + 1, this, pretty, spaces, formats)
+    new ArrayStreamingJsonWriter(nodes, level + 1, this, pretty, spaces, alwaysEscapeUnicode)
   }
 
   def startObject(): JsonWriter[T] = {
-    new ObjectStreamingJsonWriter(nodes, level + 1, this, pretty, spaces, formats)
+    new ObjectStreamingJsonWriter(nodes, level + 1, this, pretty, spaces, alwaysEscapeUnicode)
   }
 
   def addNode(node: String): JsonWriter[T]

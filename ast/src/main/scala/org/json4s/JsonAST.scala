@@ -139,6 +139,11 @@ object JsonAST {
     type Values = BigInt
     def values = num
   }
+  object JInt {
+    def apply(num: Byte): JInt = new JInt(BigInt(num))
+    def apply(num: Short): JInt = new JInt(BigInt(num))
+    def apply(num: Char): JInt = new JInt(BigInt(num))
+  }
   case class JBool(value: Boolean) extends JValue {
     type Values = Boolean
     def values = value

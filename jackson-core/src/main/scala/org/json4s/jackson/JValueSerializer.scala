@@ -3,6 +3,7 @@ package jackson
 
 import com.fasterxml.jackson.databind.{SerializerProvider, JsonSerializer}
 import com.fasterxml.jackson.core.JsonGenerator
+import org.json4s.JsonAST._
 
 class JValueSerializer extends JsonSerializer[JValue]{
   def serialize(value: JValue, json: JsonGenerator, provider: SerializerProvider): Unit = {

@@ -22,7 +22,6 @@ import java.util.regex.Pattern
 import com.mongodb.{BasicDBObject, BasicDBList, DBObject}
 import org.bson.types.ObjectId
 import java.util.concurrent.atomic.AtomicReference
-import org.json4s.ParserUtil.ParseException
 import collection.JavaConverters._
 
 object JObjectParser  {

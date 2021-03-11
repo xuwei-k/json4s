@@ -57,7 +57,7 @@ object build {
 
   val json4sSettings = mavenCentralFrouFrou ++ Def.settings(
     organization := "org.json4s",
-    scalaVersion := Scala212,
+    scalaVersion := "3.0.0-RC2-bin-20210310-4af1386-NIGHTLY",
     crossScalaVersions := Seq("2.11.12", Scala212, "2.13.5"),
     scalacOptions ++= Seq(
       "-unchecked",
@@ -87,6 +87,7 @@ object build {
         case _ =>
           Seq(
             "-Xignore-scala2-macros", // TODO https://github.com/etorreborre/specs2/issues/848
+            "-rewrite",
             "-source",
             "3.0-migration",
           )

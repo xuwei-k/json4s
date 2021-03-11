@@ -6,7 +6,7 @@ import java.io.StringWriter
 class JsonWriterSpec extends Specification {
   "JsonWriter" should {
     "https://github.com/json4s/json4s/issues/393" in {
-      val writer = JsonWriter.streaming(new StringWriter)
+      val writer = JsonWriter.streaming(new StringWriter, alwaysEscapeUnicode = false)
       writer.addJValue(JLong(42))
       writer.result.toString must_== "42"
     }

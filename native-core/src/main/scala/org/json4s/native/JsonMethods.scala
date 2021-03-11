@@ -1,7 +1,9 @@
 package org.json4s
 package native
 
+import org.json4s.JsonAST._
 import org.json4s.native.Document._
+import org.json4s.prefs.EmptyValueStrategy
 import io.Source
 
 trait JsonMethods extends org.json4s.JsonMethods[Document] {
@@ -24,8 +26,8 @@ trait JsonMethods extends org.json4s.JsonMethods[Document] {
    * @see Printer#compact
    * @see Printer#pretty
    */
-  def render(value: JValue)(implicit formats: Formats = DefaultFormats): Document =
-    formats.emptyValueStrategy.replaceEmpty(value) match {
+  def render(value: JValue, alwaysEscapeUnicode: Boolean = false, emptyValueStrategy: EmptyValueStrategy = EmptyValueStrategy.default): Document =
+    emptyValueStrategy.replaceEmpty(value) match {
       case null          => text("null")
       case JBool(true)   => text("true")
       case JBool(false)  => text("false")
@@ -36,11 +38,11 @@ trait JsonMethods extends org.json4s.JsonMethods[Document] {
       case JNull         => text("null")
       case JNothing      => sys.error("can't render 'nothing'")
       case JString(null) => text("null")
-      case JString(s)    => text("\""+ParserUtil.quote(s)+"\"")
-      case JArray(arr)   => text("[") :: series(trimArr(arr).map(render)) :: text("]")
-      case JSet(set)     => text("[") :: series(trimArr(set).map(render)) :: text("]")
+      case JString(s)    => text("\""+ParserUtil.quote(s, alwaysEscapeUnicode)+"\"")
+      case JArray(arr)   => text("[") :: series(trimArr(arr).map(render(_, alwaysEscapeUnicode, emptyValueStrategy))) :: text("]")
+      case JSet(set)     => text("[") :: series(trimArr(set).map(render(_, alwaysEscapeUnicode, emptyValueStrategy))) :: text("]")
       case JObject(obj)  =>
-        val nested = break :: fields(trimObj(obj).map({case (n,v) => text("\""+ParserUtil.quote(n)+"\":") :: render(v)}))
+        val nested = break :: fields(trimObj(obj).map({case (n,v) => text("\""+ParserUtil.quote(n, alwaysEscapeUnicode)+"\":") :: render(v, alwaysEscapeUnicode, emptyValueStrategy)}))
         text("{") :: nest(2, nested) :: break :: text("}")
     }
 

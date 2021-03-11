@@ -3,6 +3,7 @@ package jackson
 
 import com.fasterxml.jackson.databind.ser.Serializers
 import com.fasterxml.jackson.databind.{BeanDescription, JavaType, SerializationConfig}
+import org.json4s.JsonAST._
 
 private object JValueSerializerResolver extends Serializers.Base {
   private[this] val JVALUE = classOf[JValue]

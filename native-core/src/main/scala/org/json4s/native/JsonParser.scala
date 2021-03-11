@@ -16,7 +16,8 @@
 package org.json4s
 package native
 
-import org.json4s.ParserUtil.{Buffer, parseDouble, ParseException}
+import org.json4s.ParserUtil.{Buffer, parseDouble}
+import org.json4s.JsonAST._
 
 /** JSON parser.
  */
@@ -56,17 +57,17 @@ object JsonParser {
 
   /** Return parsed JSON.
    */
-  @throws[ParserUtil.ParseException]
+  @throws[ParseException]
   def parse(s: String): JValue = parse(s, useBigDecimalForDouble = false, useBigIntForLong = true)
 
   /** Return parsed JSON.
    */
-  @throws[ParserUtil.ParseException]
+  @throws[ParseException]
   def parse(s: String, useBigDecimalForDouble: Boolean): JValue = parse(s, useBigDecimalForDouble = useBigDecimalForDouble, useBigIntForLong = true)
 
   /** Return parsed JSON.
    */
-  @throws[ParserUtil.ParseException]
+  @throws[ParseException]
   def parse(s: String, useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean): JValue =
     parse(new Buffer(new StringReader(s), false), useBigDecimal = useBigDecimalForDouble, useBigInt = useBigIntForLong)
 
@@ -75,7 +76,7 @@ object JsonParser {
    * @param useBigDecimalForDouble true if double values need to be parsed as BigDecimal
    * @param useBigIntForLong true if long values need to be parsed as BigInt
    */
-  @throws[ParserUtil.ParseException]
+  @throws[ParseException]
   def parse(s: Reader, closeAutomatically: Boolean = true, useBigDecimalForDouble: Boolean = false, useBigIntForLong: Boolean = true): JValue =
     parse(new Buffer(s, closeAutomatically), useBigDecimal = useBigDecimalForDouble, useBigInt = useBigIntForLong)
 
@@ -184,7 +185,7 @@ object JsonParser {
       }
     }
 
-   def go(): Unit = {
+    def go(): Unit = {
       token = p.nextToken
       token match {
         case OpenObj          => vals.push(JObject(Nil))

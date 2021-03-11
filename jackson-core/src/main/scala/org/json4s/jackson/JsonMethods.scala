@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.DeserializationFeature.{USE_BIG_DECIMAL_FOR_FLOATS, USE_BIG_INTEGER_FOR_INTS}
 import com.fasterxml.jackson.core.json._
 import scala.util.control.Exception.allCatch
+import org.json4s.JsonAST.JValue
+import org.json4s.prefs.EmptyValueStrategy
 
 trait JsonMethods extends org.json4s.JsonMethods[JValue] {
 
@@ -41,12 +43,12 @@ trait JsonMethods extends org.json4s.JsonMethods[JValue] {
     parse(in, useBigDecimalForDouble, useBigIntForLong)
   }
 
-  def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue = {
-    if (mapper.isEnabled(JsonWriteFeature.ESCAPE_NON_ASCII.mappedFeature()) != formats.alwaysEscapeUnicode) {
-      mapper.getFactory().configure(JsonWriteFeature.ESCAPE_NON_ASCII.mappedFeature(), formats.alwaysEscapeUnicode)
+  def render(value: JValue, alwaysEscapeUnicode: Boolean = false, emptyValueStrategy: EmptyValueStrategy = EmptyValueStrategy.default): JValue = {
+    if (mapper.isEnabled(JsonWriteFeature.ESCAPE_NON_ASCII.mappedFeature()) != alwaysEscapeUnicode) {
+      mapper.getFactory().configure(JsonWriteFeature.ESCAPE_NON_ASCII.mappedFeature(), alwaysEscapeUnicode)
     }
 
-    formats.emptyValueStrategy.replaceEmpty(value)
+    emptyValueStrategy.replaceEmpty(value)
   }
 
   def compact(d: JValue): String = mapper.writeValueAsString(d)

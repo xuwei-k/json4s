@@ -40,7 +40,7 @@ object Serialization extends Serialization  {
   /** Serialize to Writer.
    */
   def write[A, W <: Writer](a: A, out: W)(implicit formats: Formats): W = {
-    Extraction.decomposeWithBuilder(a, JsonWriter.streaming(out)(formats))(formats)
+    Extraction.decomposeWithBuilder(a, JsonWriter.streaming(out, formats.alwaysEscapeUnicode))(formats)
   }
 
   /** Serialize to String (pretty format).
@@ -51,7 +51,7 @@ object Serialization extends Serialization  {
   /** Serialize to Writer (pretty format).
    */
   def writePretty[A, W <: Writer](a: A, out: W)(implicit formats: Formats): W = {
-    Extraction.decomposeWithBuilder(a, JsonWriter.streamingPretty(out)(formats))(formats)
+    Extraction.decomposeWithBuilder(a, JsonWriter.streamingPretty(out, formats.alwaysEscapeUnicode))(formats)
   }
 
   /** Serialize to String (pretty format).

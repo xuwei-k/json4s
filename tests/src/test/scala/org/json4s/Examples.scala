@@ -205,12 +205,6 @@ abstract class Examples[T](mod: String) extends Specification with JsonMethods[T
       parse("{\"a\" : []}") \ "a" \ "c" must_== JNothing
     }
 
-    "Unbox values using XPath-like type expression" in {
-      parse(objArray) \ "children" \\ classOf[JInt] must_== List(5, 3)
-      parse(lotto) \ "lotto" \ "winning-numbers" \ classOf[JInt] must_== List(2, 45, 34, 23, 7, 5, 3)
-      parse(lotto) \\ "winning-numbers" \ classOf[JInt] must_== List(2, 45, 34, 23, 7, 5, 3)
-    }
-
     "Quoted example" in {
       val json = parse(quoted)
       List("foo \" \n \t \r bar") must_== json.values
@@ -328,10 +322,7 @@ abstract class Examples[T](mod: String) extends Specification with JsonMethods[T
 
       // #131 Strategies for empty value treatment
       // https://github.com/json4s/json4s/pull/131
-      val preserve = new DefaultFormats {
-        override val emptyValueStrategy: EmptyValueStrategy = EmptyValueStrategy.preserve
-      }
-      compact(render(a)(preserve)) must_== "[1,null,null,1]"
+      compact(render(a, emptyValueStrategy = EmptyValueStrategy.preserve)) must_== "[1,null,null,1]"
     }
 
     "#146 Snake support with case classes" in {

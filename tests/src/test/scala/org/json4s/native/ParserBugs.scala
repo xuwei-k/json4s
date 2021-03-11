@@ -28,7 +28,7 @@ class ParserBugs extends Specification {
 
     "Solo quote mark should fail cleanly (not StringIndexOutOfBoundsException) (1041)" in {
       JsonParser.parse("\"", discardParser) must throwA[Throwable].like {
-        case e: ParserUtil.ParseException => e.getMessage must startWith("unexpected eof")
+        case e: ParseException => e.getMessage must startWith("unexpected eof")
       }
     }
 
