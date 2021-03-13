@@ -3,6 +3,7 @@ package org.json4s
 /**
  * Created by pankhuri on 8/18/16.
  */
+import org.json4s.JsonAST._
 import org.scalatest.wordspec.AnyWordSpec
 
 class JSetExamples extends AnyWordSpec {

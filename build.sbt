@@ -53,6 +53,7 @@ lazy val nativeCore = CrossProject(
 )(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     json4sSettings(cross = true),
+    libraryDependencies ++= Seq(scalatest.value, mockito, scalatestScalacheck.value, scalaXml.value % "test"),
   )
   .dependsOn(ast % "compile;test->test")
 
@@ -137,7 +138,7 @@ lazy val json4sTests = Project(
 ).settings(
   json4sSettings(),
   noPublish,
-  libraryDependencies ++= Seq(scalatest, mockito, jaxbApi, scalatestScalacheck.value),
+  libraryDependencies ++= Seq(scalatest.value, mockito, jaxbApi, scalatestScalacheck.value),
   Test / console / initialCommands :=
     """
       |import org.json4s._

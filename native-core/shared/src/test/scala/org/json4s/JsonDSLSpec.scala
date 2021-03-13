@@ -2,6 +2,7 @@ package org.json4s
 
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.Checkers
+import org.json4s.JsonAST._
 
 class JsonDSLSpec extends AnyWordSpec with JValueGen with Checkers {
 
