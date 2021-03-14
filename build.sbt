@@ -20,32 +20,33 @@ lazy val ast = CrossProject(
 
 lazy val astJVM = ast.jvm
 
-lazy val scalap = Project(
+lazy val scalap = CrossProject(
   id = "json4s-scalap",
   base = file("scalap"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform)
+.settings(
+  json4sSettings(cross = true),
 )
 
-lazy val xml = Project(
+lazy val xml = CrossProject(
   id = "json4s-xml",
   base = file("xml"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies += scalaXml.value,
 ).dependsOn(core)
 
-lazy val core = Project(
+lazy val core = CrossProject(
   id = "json4s-core",
   base = file("core"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies ++= Seq(paranamer),
   Test / console / initialCommands := """
       |import org.json4s._
       |import reflect._
     """.stripMargin,
-).dependsOn(astJVM % "compile;test->test", scalap)
+).dependsOn(ast % "compile;test->test", scalap)
 
 lazy val nativeCore = CrossProject(
   id = "json4s-native-core",
@@ -58,84 +59,70 @@ lazy val nativeCore = CrossProject(
 
 lazy val nativeCoreJVM = nativeCore.jvm
 
-lazy val native = Project(
+lazy val native = CrossProject(
   id = "json4s-native",
   base = file("native"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
 ).dependsOn(
   core % "compile;test->test",
-  nativeCoreJVM % "compile;test->test",
+  nativeCore % "compile;test->test",
 )
 
-lazy val json4sExt = Project(
+lazy val json4sExt = CrossProject(
   id = "json4s-ext",
   base = file("ext"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies ++= jodaTime,
 ).dependsOn(native % "provided->compile;test->test")
 
-lazy val jacksonCore = Project(
+lazy val jacksonCore = CrossProject(
   id = "json4s-jackson-core",
   base = file("jackson-core"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies ++= jackson,
-).dependsOn(astJVM % "compile;test->test")
+).dependsOn(ast % "compile;test->test")
 
-lazy val jacksonSupport = Project(
+lazy val jacksonSupport = CrossProject(
   id = "json4s-jackson",
   base = file("jackson"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies ++= jackson,
 ).dependsOn(
   jacksonCore % "compile;test->test",
   core % "compile;test->test",
 )
 
-lazy val examples = Project(
-  id = "json4s-examples",
-  base = file("examples"),
-).settings(
-  json4sSettings(),
-  noPublish,
-).dependsOn(
-  core % "compile;test->test",
-  native % "compile;test->test",
-  jacksonSupport % "compile;test->test",
-  json4sExt,
-  mongo
-)
-
-lazy val scalazExt = Project(
+lazy val scalazExt = CrossProject(
   id = "json4s-scalaz",
   base = file("scalaz"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies += scalaz_core.value,
 ).dependsOn(
-  astJVM % "compile;test->test",
-  nativeCoreJVM % "provided->compile",
+  ast % "compile;test->test",
+  nativeCore % "provided->compile",
   jacksonCore % "provided->compile",
 )
 
-lazy val mongo = Project(
+lazy val mongo = CrossProject(
   id = "json4s-mongo",
   base = file("mongo"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   libraryDependencies ++= Seq(
     "org.mongodb" % "mongo-java-driver" % "3.12.8"
   ),
 ).dependsOn(core % "compile;test->test")
 
-lazy val json4sTests = Project(
+lazy val json4sTests = CrossProject(
   id = "json4s-tests",
   base = file("tests"),
-).settings(
-  json4sSettings(),
+)(JVMPlatform, JSPlatform, NativePlatform).settings(
+  json4sSettings(cross = true),
   noPublish,
   libraryDependencies ++= Seq(scalatest, mockito, jaxbApi, scalatestScalacheck.value),
   Test / console / initialCommands :=

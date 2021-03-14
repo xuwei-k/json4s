@@ -1,6 +1,10 @@
 import sbt._
 import Keys._
 import dotty.tools.sbtplugin.DottyPlugin.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import sbtcrossproject.CrossPlugin.autoImport._
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+import scalanativecrossproject.ScalaNativeCrossPlugin.autoImport._
 
 object Dependencies {
   lazy val jaxbApi = "javax.xml.bind" % "jaxb-api" % "2.3.1" % "test"
@@ -13,21 +17,21 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.12.2"
   )
   lazy val scalaz_core = Def.setting(
-    "org.scalaz" %% "scalaz-core" % "7.3.3" withDottyCompat scalaVersion.value
+    "org.scalaz" %%% "scalaz-core" % "7.3.3" withDottyCompat scalaVersion.value
   )
   lazy val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.8"
   lazy val scalatest = "org.scalatest" %% "scalatest" % "3.2.6" % "test"
   lazy val scalatestScalacheck = Def.setting(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
-        "org.scalatestplus" %% "scalacheck-1-15" % "3.2.4.0-M1" % "test"
+        "org.scalatestplus" %%% "scalacheck-1-15" % "3.2.4.0-M1" % "test"
       case _ =>
-        "org.scalatestplus" %% "scalacheck-1-15" % "3.2.6.0" % "test"
+        "org.scalatestplus" %%% "scalacheck-1-15" % "3.2.6.0" % "test"
     }
   )
   lazy val mockito = "org.mockito" % "mockito-core" % "3.8.0" % "test"
 
   lazy val scalaXml = Def.setting {
-    "org.scala-lang.modules" %% "scala-xml" % "1.3.0" withDottyCompat scalaVersion.value
+    "org.scala-lang.modules" %%% "scala-xml" % "1.3.0" withDottyCompat scalaVersion.value
   }
 }
