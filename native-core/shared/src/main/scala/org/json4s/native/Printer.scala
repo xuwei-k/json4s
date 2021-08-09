@@ -15,7 +15,7 @@ import scala.annotation.tailrec
  */
 object Printer extends Printer
 trait Printer {
-  import java.io._
+  import java.io.*
 
   /**
    * Compact printing (no whitespace etc.)

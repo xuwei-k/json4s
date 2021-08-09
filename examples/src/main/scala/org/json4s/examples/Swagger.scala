@@ -3,7 +3,7 @@ package examples
 
 import java.util.{Date => JDate, TimeZone, Locale}
 import ext.{JodaTimeSerializers, EnumNameSerializer}
-import org.joda.time._
+import org.joda.time.*
 import format.ISODateTimeFormat
 
 sealed trait HttpMethod {
@@ -55,9 +55,9 @@ case class ExtensionMethod(name: String) extends HttpMethod {
 
 object HttpMethod {
   private[this] val methodMap =
-    Map(List(Options, Get, Head, Post, Put, Delete, Trace, Connect, Patch) map { method =>
+    Map((List(Options, Get, Head, Post, Put, Delete, Trace, Connect, Patch).map { method =>
       (method.toString, method)
-    }: _*)
+    })*)
 
   /**
    * Maps a String as an HttpMethod.
@@ -92,7 +92,7 @@ case class Api(
 }
 
 object Api {
-  import SwaggerSerializers._
+  import SwaggerSerializers.*
 
   lazy val Iso8601Date = ISODateTimeFormat.dateTime.withZone(DateTimeZone.UTC)
 
@@ -119,7 +119,7 @@ object Api {
 }
 
 object SwaggerSerializers {
-  import JsonDSL._
+  import JsonDSL.*
 
   class HttpMethodSerializer
     extends CustomSerializer[HttpMethod](formats =>

@@ -1,7 +1,7 @@
 package org.json4s.scalap
 package scalasig
 
-import ScalaSigEntryParsers._
+import ScalaSigEntryParsers.*
 
 trait Symbol extends Flags {
   def name: String

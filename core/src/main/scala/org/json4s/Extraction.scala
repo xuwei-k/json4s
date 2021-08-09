@@ -31,9 +31,9 @@ import java.util.Date
 
 import org.json4s
 import org.json4s.prefs.ExtractionNullStrategy
-import org.json4s.reflect._
+import org.json4s.reflect.*
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 import scala.collection.mutable
 import scala.reflect.Manifest
 import scala.reflect.NameTransformer.encode
@@ -110,7 +110,7 @@ object Extraction {
     }
   }
 
-  private[this] lazy val typesHaveNaN: Set[Class[_]] = Set(
+  private[this] lazy val typesHaveNaN: Set[Class[?]] = Set(
     classOf[Double],
     classOf[Float],
     classOf[java.lang.Double],
@@ -124,7 +124,7 @@ object Extraction {
    */
   def internalDecomposeWithBuilder[T](a: Any, builder: JsonWriter[T])(implicit formats: Formats): Unit = {
     val current = builder
-    def prependTypeHint(clazz: Class[_], o: JObject) = for {
+    def prependTypeHint(clazz: Class[?], o: JObject) = for {
       hint <- formats.typeHints.hintFor(clazz)
       typeHintFieldName <- formats.typeHints.typeHintFieldNameForHint(hint, clazz)
     } yield JObject(JField(typeHintFieldName, JString(hint)) :: o.obj)
@@ -138,7 +138,7 @@ object Extraction {
     val serializer = formats.typeHints.serialize
     val any = a.asInstanceOf[AnyRef]
 
-    def decomposeObject(k: Class[_]) = {
+    def decomposeObject(k: Class[?]) = {
       val klass = Reflector.scalaTypeOf(k)
       val descriptor = Reflector.describeWithFormats(klass).asInstanceOf[reflect.ClassDescriptor]
       val ctorParams = descriptor.mostComprehensive.map(_.name)
@@ -190,9 +190,9 @@ object Extraction {
         current.addJValue(JNull)
       } else if (Reflector.isPrimitive(any.getClass)) {
         writePrimitive(any, current)(formats)
-      } else if (classOf[scala.collection.Map[_, _]].isAssignableFrom(k)) {
+      } else if (classOf[scala.collection.Map[?, ?]].isAssignableFrom(k)) {
         val obj = current.startObject()
-        val iter = any.asInstanceOf[scala.collection.Map[_, _]].iterator
+        val iter = any.asInstanceOf[scala.collection.Map[?, ?]].iterator
         while (iter.hasNext) {
           iter.next() match {
             case (k: String, v) => addField(k, v, obj)
@@ -218,33 +218,33 @@ object Extraction {
           }
         }
         obj.endObject()
-      } else if (classOf[Iterable[_]].isAssignableFrom(k)) {
+      } else if (classOf[Iterable[?]].isAssignableFrom(k)) {
         val arr = current.startArray()
-        val iter = any.asInstanceOf[Iterable[_]].iterator
+        val iter = any.asInstanceOf[Iterable[?]].iterator
         while (iter.hasNext) { internalDecomposeWithBuilder(iter.next(), arr) }
         arr.endArray()
-      } else if (classOf[java.util.Collection[_]].isAssignableFrom(k)) {
+      } else if (classOf[java.util.Collection[?]].isAssignableFrom(k)) {
         val arr = current.startArray()
-        val iter = any.asInstanceOf[java.util.Collection[_]].iterator
+        val iter = any.asInstanceOf[java.util.Collection[?]].iterator
         while (iter.hasNext) { internalDecomposeWithBuilder(iter.next(), arr) }
         arr.endArray()
       } else if (k.isArray) {
         val arr = current.startArray()
-        val iter = any.asInstanceOf[Array[_]].iterator
+        val iter = any.asInstanceOf[Array[?]].iterator
         while (iter.hasNext) { internalDecomposeWithBuilder(iter.next(), arr) }
         arr.endArray()
-      } else if (classOf[Option[_]].isAssignableFrom(k)) {
-        any.asInstanceOf[Option[_]].foreach(internalDecomposeWithBuilder(_, current))
-      } else if (classOf[Either[_, _]].isAssignableFrom(k)) {
-        val v = any.asInstanceOf[Either[_, _]]
+      } else if (classOf[Option[?]].isAssignableFrom(k)) {
+        any.asInstanceOf[Option[?]].foreach(internalDecomposeWithBuilder(_, current))
+      } else if (classOf[Either[?, ?]].isAssignableFrom(k)) {
+        val v = any.asInstanceOf[Either[?, ?]]
         if (v.isLeft) {
           internalDecomposeWithBuilder(v.left.get, current)
         } else {
           internalDecomposeWithBuilder(v.right.get, current)
         }
-      } else if (classOf[(_, _)].isAssignableFrom(k)) {
+      } else if (classOf[(?, ?)].isAssignableFrom(k)) {
 
-        any.asInstanceOf[(_, _)] match {
+        any.asInstanceOf[(?, ?)] match {
           case (k: String, v) =>
             val obj = current.startObject()
             addField(k, v, obj)
@@ -253,7 +253,7 @@ object Extraction {
             val obj = current.startObject()
             addField(k.name, v, obj)
             obj.endObject()
-          case _: (_, _) =>
+          case _: (?, ?) =>
             decomposeObject(k)
         }
       } else {
@@ -274,7 +274,7 @@ object Extraction {
   def decompose(a: Any)(implicit formats: Formats): JValue =
     decomposeWithBuilder(a, if (formats.wantsBigDecimal) JsonWriter.bigDecimalAst else JsonWriter.ast)
 
-  private[this] def writePrimitive(a: Any, builder: JsonWriter[_])(implicit formats: Formats) = a match {
+  private[this] def writePrimitive(a: Any, builder: JsonWriter[?])(implicit formats: Formats) = a match {
     case x: String => builder.string(x)
     case x: Int => builder.int(x)
     case x: Long => builder.long(x)
@@ -428,7 +428,7 @@ object Extraction {
             convertedKey -> extractedValue
           }
           if (scalaType.isMutableMap) {
-            scala.collection.mutable.Map(values: _*)
+            scala.collection.mutable.Map(values*)
           } else {
             values.toMap
           }
@@ -440,7 +440,7 @@ object Extraction {
     } else if (scalaType.isCollection) {
       customOrElse(scalaType, json)(new CollectionBuilder(_, scalaType).result)
     } else if (
-      classOf[(_, _)].isAssignableFrom(scalaType.erasure) && (classOf[String].isAssignableFrom(
+      classOf[(?, ?)].isAssignableFrom(scalaType.erasure) && (classOf[String].isAssignableFrom(
         scalaType.typeArgs.head.erasure
       ) || classOf[Symbol].isAssignableFrom(scalaType.typeArgs.head.erasure))
     ) {
@@ -485,8 +485,8 @@ object Extraction {
 
   private class CollectionBuilder(json: JValue, tpe: ScalaType)(implicit formats: Formats) {
     private[this] val typeArg = tpe.typeArgs.head
-    private[this] def mkCollection(constructor: Array[_] => Any) = {
-      val array: Array[_] = json match {
+    private[this] def mkCollection(constructor: Array[?] => Any) = {
+      val array: Array[?] = json match {
         case JArray(arr) =>
           arr.flatMap {
             case JNull if formats.extractionNullStrategy == ExtractionNullStrategy.TreatAsAbsent => None
@@ -501,7 +501,7 @@ object Extraction {
       constructor(array)
     }
 
-    private[this] def mkTypedArray(a: Array[_]) = {
+    private[this] def mkTypedArray(a: Array[?]) = {
       import java.lang.reflect.Array.{newInstance => newArray}
 
       a.foldLeft((newArray(typeArg.erasure, a.length), 0)) { (tuple, e) =>
@@ -517,13 +517,13 @@ object Extraction {
       lazy val customRich = Formats.customRichDeserializer(tpe, json)(formats)
       if (custom.isDefinedAt(tpe.typeInfo, json)) custom(tpe.typeInfo, json)
       else if (customRich.isDefinedAt(tpe, json)) customRich(tpe, json)
-      else if (tpe.erasure == classOf[List[_]]) mkCollection(_.toList)
-      else if (tpe.erasure == classOf[Set[_]]) mkCollection(_.toSet)
-      else if (tpe.erasure == classOf[scala.collection.mutable.Set[_]])
-        mkCollection(a => scala.collection.mutable.Set(a: _*))
-      else if (tpe.erasure == classOf[scala.collection.mutable.Seq[_]])
-        mkCollection(a => scala.collection.mutable.Seq(a: _*))
-      else if (tpe.erasure == classOf[java.util.ArrayList[_]])
+      else if (tpe.erasure == classOf[List[?]]) mkCollection(_.toList)
+      else if (tpe.erasure == classOf[Set[?]]) mkCollection(_.toSet)
+      else if (tpe.erasure == classOf[scala.collection.mutable.Set[?]])
+        mkCollection(a => scala.collection.mutable.Set(a*))
+      else if (tpe.erasure == classOf[scala.collection.mutable.Seq[?]])
+        mkCollection(a => scala.collection.mutable.Seq(a*))
+      else if (tpe.erasure == classOf[java.util.ArrayList[?]])
         mkCollection(a => new java.util.ArrayList[Any](a.toList.asJavaCollection))
       else if (tpe.erasure.isArray) mkCollection(mkTypedArray)
       else {
@@ -584,7 +584,7 @@ object Extraction {
 
           if (formats.strictFieldDeserialization) {
             val renamedFields: Seq[(String, json4s.JValue)] = {
-              val maybeClassSerializer: Option[(Class[_], FieldSerializer[_])] = {
+              val maybeClassSerializer: Option[(Class[?], FieldSerializer[?])] = {
                 formats.fieldSerializers.find { case (clazz, _) => clazz == a.getClass }
               }
               maybeClassSerializer match {

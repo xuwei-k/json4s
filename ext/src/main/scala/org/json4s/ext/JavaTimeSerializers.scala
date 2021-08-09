@@ -1,13 +1,13 @@
 package org.json4s.ext
 
-import java.time._
+import java.time.*
 import java.util.{Date, TimeZone}
 
-import org.json4s._
+import org.json4s.*
 
 object JavaTimeSerializers {
 
-  def all: List[Serializer[_]] = List[Serializer[_]](
+  def all: List[Serializer[?]] = List[Serializer[?]](
     JLocalDateTimeSerializer,
     JZonedDateTimeSerializer,
     JOffsetDateTimeSerializer,

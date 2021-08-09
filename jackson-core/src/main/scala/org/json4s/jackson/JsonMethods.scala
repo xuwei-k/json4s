@@ -1,9 +1,9 @@
 package org.json4s
 package jackson
 
-import com.fasterxml.jackson.databind._
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.DeserializationFeature.{USE_BIG_DECIMAL_FOR_FLOATS, USE_BIG_INTEGER_FOR_INTS}
-import com.fasterxml.jackson.core.json._
+import com.fasterxml.jackson.core.json.*
 import scala.util.control.Exception.allCatch
 import org.json4s.prefs.EmptyValueStrategy
 

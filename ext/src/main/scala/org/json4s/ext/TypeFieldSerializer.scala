@@ -4,7 +4,7 @@ import org.json4s.{JField, JObject, JString}
 import org.json4s.reflect.{Reflector, ScalaType}
 import org.json4s.{CustomSerializer, DefaultFormats, Extraction, Formats, JValue, NoTypeHints}
 
-class TypeFieldSerializer[T: Manifest](fieldName: String, mapping: Map[String, Class[_ <: T]])
+class TypeFieldSerializer[T: Manifest](fieldName: String, mapping: Map[String, Class[? <: T]])
   extends CustomSerializer[T](fm => {
     implicit val format: Formats = new Formats {
       val dateFormat = DefaultFormats.lossless.dateFormat

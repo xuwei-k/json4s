@@ -24,7 +24,7 @@ import org.json4s.JsonAST.JField
  */
 object JsonParser {
 
-  import java.io._
+  import java.io.*
 
   /**
    * Parsed tokens from low level pull parser.

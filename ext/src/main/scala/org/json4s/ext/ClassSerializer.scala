@@ -1,6 +1,6 @@
 package org.json4s.ext
 
-import org.json4s._
+import org.json4s.*
 import scala.reflect.{ClassTag, classTag}
 
 trait ClassType[A, B] {

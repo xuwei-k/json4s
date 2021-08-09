@@ -1,7 +1,7 @@
 package org.json4s
 
 import java.io.{StringWriter, Writer => JWriter}
-import StreamingJsonWriter._
+import StreamingJsonWriter.*
 
 private final class FieldStreamingJsonWriter[T <: JWriter](
   name: String,

@@ -15,7 +15,7 @@ object ScalaSigParser {
   import Main.{BYTES_VALUE, SCALA_LONG_SIG_ANNOTATION, SCALA_SIG, SCALA_SIG_ANNOTATION}
 
   def scalaSigFromAnnotation(classFile: ClassFile): Option[ScalaSig] = {
-    import classFile._
+    import classFile.*
 
     def getBytes(bytesElem: AnnotationElement): Array[Byte] = bytesElem.elementValue match {
       case ConstValueIndex(index) => bytesForIndex(index)
@@ -54,7 +54,7 @@ object ScalaSigParser {
     }
   }
 
-  def parse(clazz: Class[_]): Option[ScalaSig] = {
+  def parse(clazz: Class[?]): Option[ScalaSig] = {
     val byteCode = ByteCode.forClass(clazz)
     val classFile = ClassFileParser.parse(byteCode)
 

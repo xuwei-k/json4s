@@ -55,7 +55,7 @@ case class ClassDescriptor(
       }
     }
 
-    val names = Set(argNames: _*)
+    val names = Set(argNames*)
     def score(args: List[ConstructorParamDescriptor]): Score =
       Score(
         detailed = args.foldLeft(0)((s, arg) =>

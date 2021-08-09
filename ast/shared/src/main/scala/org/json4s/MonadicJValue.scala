@@ -44,7 +44,7 @@ object MonadicJValue {
 }
 
 class MonadicJValue(private val jv: JValue) extends AnyVal {
-  import MonadicJValue._
+  import MonadicJValue.*
 
   /**
    * XPath-like expression to query JSON fields by name. Matches only fields on

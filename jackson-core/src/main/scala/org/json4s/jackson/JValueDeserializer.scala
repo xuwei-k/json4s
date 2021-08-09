@@ -3,12 +3,12 @@ package org.json4s.jackson
 import com.fasterxml.jackson.databind.{DeserializationFeature, DeserializationContext, JsonDeserializer}
 import com.fasterxml.jackson.core.{JsonTokenId, JsonToken, JsonParser}
 import collection.mutable
-import org.json4s._
+import org.json4s.*
 import org.json4s.JsonAST.JField
 
 import scala.annotation.switch
 
-class JValueDeserializer(klass: Class[_]) extends JsonDeserializer[Object] {
+class JValueDeserializer(klass: Class[?]) extends JsonDeserializer[Object] {
   def deserialize(jp: JsonParser, ctxt: DeserializationContext): Object = {
 
     def _deserialize(jp: JsonParser, ctxt: DeserializationContext): Object = {

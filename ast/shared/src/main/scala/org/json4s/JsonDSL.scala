@@ -16,7 +16,7 @@
 
 package org.json4s
 
-import JsonAST._
+import JsonAST.*
 
 /**
  * Basic implicit conversions from primitive types into JSON.

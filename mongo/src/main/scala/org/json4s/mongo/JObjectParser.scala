@@ -23,7 +23,7 @@ import com.mongodb.{BasicDBObject, BasicDBList, DBObject}
 import org.bson.types.ObjectId
 import java.util.concurrent.atomic.AtomicReference
 import org.json4s.ParserUtil.ParseException
-import collection.JavaConverters._
+import collection.JavaConverters.*
 
 object JObjectParser {
 
@@ -52,7 +52,7 @@ object JObjectParser {
   def serialize(a: Any)(implicit formats: Formats): JValue = serialize0(a, formats)
 
   private[this] def serialize0(a: Any, formats: Formats): JValue = {
-    import Meta.Reflection._
+    import Meta.Reflection.*
     a.asInstanceOf[AnyRef] match {
       case null => JNull
       case x if isPrimitive(x.getClass) => primitive2jvalue(x)
