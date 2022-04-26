@@ -77,12 +77,12 @@ object ScalaSigReader {
     findArgTypeForField(read(clazz), typeArgIndex)
   }
 
-  def findClass(clazz: Class[_]): ClassSymbol = {
+  private def findClass(clazz: Class[_]): ClassSymbol = {
     val sig = findScalaSig(clazz).getOrElse(fail("Can't find ScalaSig for " + clazz))
     findClass(sig, clazz).getOrElse(fail("Can't find " + clazz + " from parsed ScalaSig"))
   }
 
-  def findClass(sig: ScalaSig, clazz: Class[_]): Option[ClassSymbol] = {
+  private def findClass(sig: ScalaSig, clazz: Class[_]): Option[ClassSymbol] = {
     val name = safeSimpleName(clazz)
 
     sig.symbols.collect { case c: ClassSymbol if !c.isModule => c }.find(_.name == name).orElse {
@@ -95,41 +95,36 @@ object ScalaSigReader {
     }
   }
 
-  def findCompanionObject(clazz: Class[_]): ClassSymbol = {
+  private def findCompanionObject(clazz: Class[_]): ClassSymbol = {
     val sig = findScalaSig(clazz).getOrElse(fail("Can't find ScalaSig for " + clazz))
     findCompanionObject(sig, clazz).getOrElse(fail("Can't find " + clazz + " from parsed ScalaSig"))
   }
 
-  def findCompanionObject(sig: ScalaSig, clazz: Class[_]): Option[ClassSymbol] = {
+  private def findCompanionObject(sig: ScalaSig, clazz: Class[_]): Option[ClassSymbol] = {
     val name = safeSimpleName(clazz)
     sig.symbols.collect { case c: ClassSymbol if c.isModule => c }.find(_.name == name)
   }
 
-  def findConstructor(c: ClassSymbol, argNames: List[String]): Option[MethodSymbol] = {
+  private def findConstructor(c: ClassSymbol, argNames: List[String]): Option[MethodSymbol] = {
     val ms = c.children collect {
       case m: MethodSymbol if m.name == "<init>" => m
     }
     ms.find(m => m.children.map(_.name) == argNames)
   }
 
-  def findApply(c: ClassSymbol, argNames: List[String]): Option[MethodSymbol] = {
+  private def findApply(c: ClassSymbol, argNames: List[String]): Option[MethodSymbol] = {
     val ms = c.children collect {
       case m: MethodSymbol if m.name == "apply" => m
     }
     ms.find(m => m.children.map(_.name) == argNames)
   }
 
-  def findFields(c: ClassSymbol): Seq[MethodSymbol] =
-    c.children collect {
-      case m: MethodSymbol if m.infoType.isInstanceOf[NullaryMethodType] && !m.isSynthetic => m
-    }
-
   private def findField(clazz: Class[_], name: String): Option[MethodSymbol] = findField(findClass(clazz), name)
 
   private def findField(c: ClassSymbol, name: String): Option[MethodSymbol] =
     c.children.collectFirst { case m: MethodSymbol if m.name == name => m }
 
-  def findArgType(s: MethodSymbol, argIdx: Int, typeArgIndex: Int): Class[_] = {
+  private def findArgType(s: MethodSymbol, argIdx: Int, typeArgIndex: Int): Class[_] = {
     @tailrec
     def findPrimitive(t: Type): Option[Symbol] = {
       t match {
@@ -156,7 +151,7 @@ object ScalaSigReader {
     findPrimitive(s.children(argIdx).asInstanceOf[SymbolInfoSymbol].infoType).map(toClass).getOrElse(classOf[AnyRef])
   }
 
-  def findArgType(s: MethodSymbol, argIdx: Int, typeArgIndexes: List[Int]): Class[_] = {
+  private def findArgType(s: MethodSymbol, argIdx: Int, typeArgIndexes: List[Int]): Class[_] = {
     @tailrec def findPrimitive(t: Type, curr: Int): Symbol = {
       val ii = (typeArgIndexes.length - 1) min curr
       t match {
@@ -209,7 +204,7 @@ object ScalaSigReader {
 
   private[this] def isPrimitive(s: Symbol) = toClass(s) != classOf[AnyRef]
 
-  def findScalaSig(clazz: Class[_]): Option[ScalaSig] = try {
+  private[reflect] def findScalaSig(clazz: Class[_]): Option[ScalaSig] = try {
     // taken from ScalaSigParser parse method with the explicit purpose of walking away from NPE
     parseClassFileFromByteCode(clazz).orElse(findScalaSig(clazz.getDeclaringClass))
   } catch {
@@ -223,7 +218,11 @@ object ScalaSigReader {
   val OuterFieldName = "$outer"
   val ClassLoaders = Vector(this.getClass.getClassLoader, Thread.currentThread().getContextClassLoader)
 
-  def companions(t: String, companion: Option[AnyRef] = None, classLoaders: Iterable[ClassLoader] = ClassLoaders) = {
+  def companions(
+    t: String,
+    companion: Option[AnyRef] = None,
+    classLoaders: Iterable[ClassLoader] = ClassLoaders
+  ): Option[(Class[_], Option[AnyRef])] = {
     def path(tt: String) = if (tt.endsWith("$")) tt else tt + "$"
     val cc: Option[Class[_]] = resolveClass(path(t), classLoaders) flatMap ((c: Class[_]) =>
       resolveClass(path(Reflector.rawClassOf(c).getName), classLoaders)
